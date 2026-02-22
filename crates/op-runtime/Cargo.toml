@@ -1,0 +1,18 @@
+[package]
+name = "op-runtime"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+op-core = { path = "../op-core" }
+serde = { workspace = true }
+serde_json = { workspace = true }
+thiserror = { workspace = true }
+tokio = { workspace = true }
+tracing = { workspace = true }
+chrono = { workspace = true }
+rand = { workspace = true }
+regex = { workspace = true }
+uuid = { workspace = true }
+hex = "0.4"
+dunce = "1"
