@@ -1,9 +1,13 @@
-FROM python:3.12-slim
-RUN apt-get update && apt-get install -y --no-install-recommends ripgrep && rm -rf /var/lib/apt/lists/*
-WORKDIR /app
-COPY pyproject.toml .
-COPY agent/ agent/
-RUN pip install --no-cache-dir -e .
+FROM rust:1.82-alpine AS builder
+RUN apk add musl-dev
+WORKDIR /src
+COPY Cargo.toml Cargo.lock ./
+COPY crates/ crates/
+RUN cargo build --release --target x86_64-unknown-linux-musl
+
+FROM alpine:3.20
+RUN apk add --no-cache ripgrep
+COPY --from=builder /src/target/x86_64-unknown-linux-musl/release/openplanter-agent /usr/local/bin/
 RUN mkdir -p /workspace
 WORKDIR /workspace
-ENTRYPOINT ["python", "-m", "agent"]
+ENTRYPOINT ["openplanter-agent"]

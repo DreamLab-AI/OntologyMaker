@@ -17,7 +17,7 @@ Set TypingSpeed 65ms
 Set Padding 20
 
 # Boot the TUI in demo mode
-Type "python -m agent --demo"
+Type "openplanter-agent --demo"
 Enter
 Sleep 4s
 

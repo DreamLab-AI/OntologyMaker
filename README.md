@@ -1,18 +1,18 @@
 # OpenPlanter
 
-A recursive-language-model investigation agent with a terminal UI. OpenPlanter ingests heterogeneous datasets — corporate registries, campaign finance records, lobbying disclosures, government contracts, and more — resolves entities across them, and surfaces non-obvious connections through evidence-backed analysis. It operates autonomously with file I/O, shell execution, web search, and recursive sub-agent delegation.
+A recursive-language-model investigation agent with a terminal UI, built in Rust. OpenPlanter ingests heterogeneous datasets — corporate registries, campaign finance records, lobbying disclosures, government contracts, and more — resolves entities across them, and surfaces non-obvious connections through evidence-backed analysis. It operates autonomously with file I/O, shell execution, web search, and recursive sub-agent delegation.
 
 ## Quickstart
 
 ```bash
-# Install
-pip install -e .
+# Build from source
+cargo build --release
 
 # Configure API keys (interactive prompt)
-openplanter-agent --configure-keys
+./target/release/openplanter-agent --configure-keys
 
 # Launch the TUI
-openplanter-agent --workspace /path/to/your/project
+./target/release/openplanter-agent --workspace /path/to/your/project
 ```
 
 Or run a single task headlessly:
@@ -147,38 +147,117 @@ All runtime settings can also be set via `OPENPLANTER_*` environment variables (
 ## Project Structure
 
 ```
-agent/
-  __main__.py    CLI entry point and REPL
-  engine.py      Recursive language model engine
-  runtime.py     Session persistence and lifecycle
-  model.py       Provider-agnostic LLM abstraction
-  builder.py     Engine/model factory
-  tools.py       Workspace tool implementations
-  tool_defs.py   Tool JSON schemas
-  prompts.py     System prompt construction
-  config.py      Configuration dataclass
-  credentials.py Credential management
-  tui.py         Rich terminal UI
-  demo.py        Demo mode (output censoring)
-  patching.py    File patching utilities
-  settings.py    Persistent settings
-tests/           Unit and integration tests
+Cargo.toml                  Workspace root
+crates/
+  op-core/                  Core domain types, errors, config
+    src/
+      lib.rs
+      config.rs             AgentConfig
+      credentials.rs        CredentialBundle, CredentialStore
+      settings.rs           PersistentSettings, SettingsStore
+      error.rs              ModelError, ToolError, SessionError, PatchError
+      types.rs              ToolCall, ToolResult, ModelTurn, Conversation, ImageData
+  op-model/                 LLM abstraction and provider implementations
+    src/
+      lib.rs
+      traits.rs             BaseModel trait
+      sse.rs                SSE streaming
+      http.rs               HTTP JSON helper
+      openai.rs             OpenAI-compatible provider
+      anthropic.rs          Anthropic native API
+      echo.rs               Echo fallback model
+      scripted.rs           Scripted model (testing)
+      listing.rs            Model listing queries
+      accumulator.rs        Stream accumulation
+  op-tools/                 Workspace tool implementations
+    src/
+      lib.rs
+      workspace.rs          WorkspaceTools struct
+      file_ops.rs           list_files, read_file, write_file, edit_file
+      search.rs             search_files, repo_map, symbol extraction
+      shell.rs              run_shell, run_shell_bg, check/kill_shell_bg
+      web.rs                web_search, fetch_url (Exa API)
+      patch.rs              apply_patch, hashline_edit
+      policy.rs             Shell policy checks, write conflict detection
+      defs.rs               Tool definitions and provider conversion
+  op-engine/                Recursive LLM engine
+    src/
+      lib.rs
+      engine.rs             RLMEngine
+      context.rs            ExternalContext
+      dispatch.rs           Tool call dispatch
+      condensation.rs       Context window condensation
+      judge.rs              Acceptance criteria judging
+      prompts.rs            System prompt construction
+  op-runtime/               Session persistence and lifecycle
+    src/
+      lib.rs
+      session_store.rs      SessionStore
+      session_runtime.rs    SessionRuntime
+      replay_log.rs         ReplayLogger
+      patching.rs           Codex-style patch parse and apply
+      wiki.rs               Wiki seeding
+  op-tui/                   Terminal user interface
+    src/
+      lib.rs
+      app.rs                Main TUI application state
+      repl.rs               REPL input handling, line editing
+      activity.rs           Activity display (spinner, streaming)
+      splash.rs             ASCII art splash screen
+      render.rs             Step rendering, markdown
+      commands.rs           Slash command dispatch
+      demo.rs               Demo censoring
+      theme.rs              Color theme and styling
+  op-scripts/               Data fetcher scripts (binary crate)
+    src/
+      main.rs               Subcommand dispatch
+      fetch_fec.rs          FEC campaign finance
+      fetch_census_acs.rs   Census ACS demographics
+      fetch_epa_echo.rs     EPA ECHO enforcement
+      fetch_fdic.rs         FDIC bank data
+      fetch_icij_leaks.rs   ICIJ offshore leaks
+      fetch_osha.rs         OSHA inspections
+      fetch_ofac_sdn.rs     OFAC sanctions
+      fetch_propublica_990.rs ProPublica nonprofit filings
+      fetch_sam_gov.rs      SAM.gov federal contracts
+      fetch_sec_edgar.rs    SEC EDGAR filings
+      fetch_senate_lobbying.rs Senate lobbying disclosures
+      fetch_usaspending.rs  USAspending federal awards
+      entity_resolution.rs  Fuzzy entity matching
+      cross_link_analysis.rs Pay-to-play detection
+      build_findings_json.rs Structured findings output
+      timing_analysis.rs    Performance timing
+  op-cli/                   Main binary crate (entry point)
+    src/
+      main.rs               CLI entry point (clap)
+      builder.rs            Engine/model factory construction
+wiki/                       Data source documentation
+docs/                       Architecture documents (PRD, AFD, DDD)
 ```
 
 ## Development
 
 ```bash
-# Install in editable mode
-pip install -e .
+# Build (debug)
+cargo build
 
-# Run tests
-python -m pytest tests/
+# Build (release — optimized single binary)
+cargo build --release
 
-# Skip live API tests
-python -m pytest tests/ --ignore=tests/test_live_models.py --ignore=tests/test_integration_live.py
+# Run all tests
+cargo test --workspace
+
+# Run tests for a specific crate
+cargo test -p op-core
+
+# Check without building
+cargo check --workspace
+
+# Lint
+cargo clippy --workspace
 ```
 
-Requires Python 3.10+. Dependencies: `rich`, `prompt_toolkit`, `pyfiglet`.
+Requires Rust 1.82+ (edition 2024). Key dependencies: `tokio`, `reqwest`, `serde`, `clap`, `ratatui`, `crossterm`, `tracing`.
 
 ## License
 
