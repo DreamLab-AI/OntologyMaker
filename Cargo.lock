@@ -1140,6 +1140,7 @@ name = "op-engine"
 version = "0.1.0"
 dependencies = [
  "async-trait",
+ "chrono",
  "futures",
  "op-core",
  "op-model",
@@ -1230,11 +1231,13 @@ dependencies = [
 name = "op-tui"
 version = "0.1.0"
 dependencies = [
+ "chrono",
  "crossterm",
  "op-core",
  "op-engine",
  "op-model",
  "op-runtime",
+ "parking_lot",
  "ratatui",
  "regex",
  "serde",

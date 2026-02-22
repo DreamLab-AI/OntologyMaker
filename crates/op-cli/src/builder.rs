@@ -51,10 +51,10 @@ pub fn infer_provider_for_model(model: &str) -> Option<&'static str> {
 
     // Ollama: common local model families (but not qwen-3 which is cerebras above)
     let ollama_re = Regex::new(
-        r"(?i)^(llama|mistral|gemma|phi|codellama|deepseek|vicuna|tinyllama|neural-chat|dolphin|wizardlm|orca|nous-hermes|command-r|qwen(?!-3))",
+        r"(?i)^(llama|mistral|gemma|phi|codellama|deepseek|vicuna|tinyllama|neural-chat|dolphin|wizardlm|orca|nous-hermes|command-r|qwen)",
     )
     .expect("valid regex");
-    if ollama_re.is_match(model) {
+    if ollama_re.is_match(model) && !model.to_lowercase().starts_with("qwen-3") {
         return Some("ollama");
     }
 

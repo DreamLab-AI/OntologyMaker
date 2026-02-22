@@ -6,14 +6,14 @@ use std::path::PathBuf;
 use std::sync::Arc;
 use std::time::Instant;
 
-use op_core::{AgentConfig, ImageData, ModelTurn, OpError, ToolCall, ToolResult};
+use op_core::{AgentConfig, ToolResult};
 use op_model::LlmModel;
 use op_tools::WorkspaceTools;
 use parking_lot::Mutex;
 use tokio_util::sync::CancellationToken;
 
 use crate::condensation::{
-    context_window_for_model, model_tier, should_condense, summarize_args, summarize_observation,
+    context_window_for_model, summarize_args, summarize_observation,
 };
 use crate::context::ExternalContext;
 use crate::dispatch::dispatch_tool_call;

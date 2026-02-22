@@ -17,3 +17,4 @@ futures = { workspace = true }
 tracing = { workspace = true }
 regex = { workspace = true }
 parking_lot = { workspace = true }
+chrono = { workspace = true }

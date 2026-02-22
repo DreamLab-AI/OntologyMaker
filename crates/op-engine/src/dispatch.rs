@@ -27,7 +27,7 @@ pub async fn dispatch_tool_call(
 
         "list_files" => {
             let glob = args.get("glob").and_then(|v| v.as_str());
-            let result = tools.list_files(glob).await;
+            let result = tools.list_files(glob);
             (false, result)
         }
 
@@ -41,7 +41,7 @@ pub async fn dispatch_tool_call(
                 return (false, "search_files requires non-empty query".to_string());
             }
             let glob = args.get("glob").and_then(|v| v.as_str());
-            let result = tools.search_files(query, glob).await;
+            let result = tools.search_files(query, glob);
             (false, result)
         }
 
@@ -50,8 +50,8 @@ pub async fn dispatch_tool_call(
             let max_files = args
                 .get("max_files")
                 .and_then(|v| v.as_u64())
-                .unwrap_or(200) as usize;
-            let result = tools.repo_map(glob, max_files).await;
+                .map(|v| v as usize);
+            let result = tools.repo_map(glob, max_files);
             (false, result)
         }
 
@@ -67,7 +67,7 @@ pub async fn dispatch_tool_call(
             let num_results = args
                 .get("num_results")
                 .and_then(|v| v.as_u64())
-                .unwrap_or(10) as usize;
+                .map(|v| v as u32);
             let include_text = args
                 .get("include_text")
                 .and_then(|v| v.as_bool())
@@ -106,7 +106,7 @@ pub async fn dispatch_tool_call(
                 .get("hashline")
                 .and_then(|v| v.as_bool())
                 .unwrap_or(true);
-            let result = tools.read_file(path, hashline).await;
+            let result = tools.read_file(path, hashline);
             (false, result)
         }
 
@@ -119,7 +119,7 @@ pub async fn dispatch_tool_call(
             if path.is_empty() {
                 return (false, "read_image requires path".to_string());
             }
-            let result = tools.read_image(path).await;
+            let result = tools.read_image(path);
             // The image data is handled separately by the engine via pending_image.
             (false, result.0)
         }
@@ -137,7 +137,7 @@ pub async fn dispatch_tool_call(
                 .get("content")
                 .and_then(|v| v.as_str())
                 .unwrap_or("");
-            let result = tools.write_file(path, content).await;
+            let result = tools.write_file(path, content);
             (false, result)
         }
 
@@ -150,7 +150,7 @@ pub async fn dispatch_tool_call(
             if patch.is_empty() {
                 return (false, "apply_patch requires non-empty patch".to_string());
             }
-            let result = tools.apply_patch(patch).await;
+            let result = tools.apply_patch(patch);
             (false, result)
         }
 
@@ -174,7 +174,7 @@ pub async fn dispatch_tool_call(
             if old_text.is_empty() {
                 return (false, "edit_file requires old_text".to_string());
             }
-            let result = tools.edit_file(path, old_text, new_text).await;
+            let result = tools.edit_file(path, old_text, new_text);
             (false, result)
         }
 
@@ -192,7 +192,7 @@ pub async fn dispatch_tool_call(
                 .and_then(|v| v.as_array())
                 .cloned()
                 .unwrap_or_default();
-            let result = tools.hashline_edit(path, &edits).await;
+            let result = tools.hashline_edit_json(path, &edits);
             (false, result)
         }
 
@@ -229,7 +229,7 @@ pub async fn dispatch_tool_call(
             let job_id = args.get("job_id").and_then(|v| v.as_u64());
             match job_id {
                 Some(id) => {
-                    let result = tools.check_shell_bg(id as u32).await;
+                    let result = tools.check_shell_bg(id).await;
                     (false, result)
                 }
                 None => (false, "check_shell_bg requires job_id".to_string()),
@@ -240,7 +240,7 @@ pub async fn dispatch_tool_call(
             let job_id = args.get("job_id").and_then(|v| v.as_u64());
             match job_id {
                 Some(id) => {
-                    let result = tools.kill_shell_bg(id as u32).await;
+                    let result = tools.kill_shell_bg(id).await;
                     (false, result)
                 }
                 None => (false, "kill_shell_bg requires job_id".to_string()),
@@ -264,17 +264,31 @@ pub async fn dispatch_tool_call(
 #[cfg(test)]
 mod tests {
     use super::*;
+    use std::path::Path;
 
-    #[test]
-    fn test_think_dispatch() {
+    #[tokio::test]
+    async fn test_think_dispatch() {
+        let ws = WorkspaceTools::new(Path::new("/tmp"));
         let tc = ToolCall {
             id: "tc_1".into(),
             name: "think".into(),
             arguments: serde_json::json!({"note": "testing"}),
         };
-        let rt = tokio::runtime::Runtime::new().unwrap();
-        // We'd need a real WorkspaceTools to test other tools, but think doesn't use it
-        // Just verify the pattern compiles correctly
-        assert_eq!(tc.name, "think");
+        let (is_final, result) = dispatch_tool_call(&ws, &tc).await;
+        assert!(!is_final);
+        assert!(result.contains("Thought noted"));
+        assert!(result.contains("testing"));
+    }
+
+    #[tokio::test]
+    async fn test_unknown_tool() {
+        let ws = WorkspaceTools::new(Path::new("/tmp"));
+        let tc = ToolCall {
+            id: "tc_2".into(),
+            name: "nonexistent".into(),
+            arguments: serde_json::json!({}),
+        };
+        let (_, result) = dispatch_tool_call(&ws, &tc).await;
+        assert!(result.contains("Unknown action type"));
     }
 }
