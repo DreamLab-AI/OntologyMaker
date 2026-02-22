@@ -1,0 +1,108 @@
+name: python-to-rust-conversion
+description: Complete Python-to-Rust conversion of OpenPlanter using hierarchical mesh coordination
+version: "1.0"
+type: development
+
+mesh:
+  topology: hierarchical
+  coordinator: architect
+  max_parallel: 8
+
+agents:
+  architect:
+    role: coordinator
+    description: "Oversees the full conversion, resolves cross-crate conflicts, validates integration"
+    capabilities: [planning, review, integration]
+
+  core-porter:
+    role: worker
+    description: "Ports op-core crate: config, credentials, settings, error types, core domain types"
+    capabilities: [rust, domain-modeling]
+    depends_on: []
+
+  model-porter:
+    role: worker
+    description: "Ports op-model crate: LlmModel trait, OpenAI/Anthropic implementations, SSE streaming"
+    capabilities: [rust, networking, async]
+    depends_on: [core-porter]
+
+  tools-porter:
+    role: worker
+    description: "Ports op-tools crate: WorkspaceTools, file ops, shell, search, web, patch, tool defs"
+    capabilities: [rust, io, subprocess]
+    depends_on: [core-porter]
+
+  engine-porter:
+    role: worker
+    description: "Ports op-engine crate: RLMEngine, recursive solve, dispatch, condensation, prompts"
+    capabilities: [rust, async, orchestration]
+    depends_on: [model-porter, tools-porter]
+
+  runtime-porter:
+    role: worker
+    description: "Ports op-runtime crate: SessionStore, SessionRuntime, ReplayLogger, patching, wiki"
+    capabilities: [rust, persistence, io]
+    depends_on: [core-porter]
+
+  tui-porter:
+    role: worker
+    description: "Ports op-tui crate: ratatui TUI, REPL, activity display, splash, demo censoring"
+    capabilities: [rust, tui, ratatui]
+    depends_on: [engine-porter, runtime-porter]
+
+  cli-porter:
+    role: worker
+    description: "Ports op-cli crate: clap CLI, builder/factory, credential loading, main entry point"
+    capabilities: [rust, cli, clap]
+    depends_on: [tui-porter]
+
+  scripts-porter:
+    role: worker
+    description: "Ports op-scripts crate: 13 data fetchers, entity resolution, cross-link analysis"
+    capabilities: [rust, networking, csv]
+    depends_on: [core-porter]
+
+  test-validator:
+    role: validator
+    description: "Ports all 43 test files, runs cargo test, validates behavioral parity"
+    capabilities: [rust, testing]
+    depends_on: [cli-porter, scripts-porter]
+
+phases:
+  - name: foundation
+    description: "Scaffold workspace, create Cargo.toml files, establish shared types"
+    agents: [core-porter]
+    tasks:
+      - scaffold-workspace
+      - implement-op-core
+
+  - name: parallel-layers
+    description: "Port model, tools, runtime, and scripts crates in parallel"
+    agents: [model-porter, tools-porter, runtime-porter, scripts-porter]
+    parallel: true
+    tasks:
+      - implement-op-model
+      - implement-op-tools
+      - implement-op-runtime
+      - implement-op-scripts
+
+  - name: integration-layer
+    description: "Port engine crate (depends on model + tools)"
+    agents: [engine-porter]
+    tasks:
+      - implement-op-engine
+
+  - name: presentation-layer
+    description: "Port TUI and CLI crates"
+    agents: [tui-porter, cli-porter]
+    tasks:
+      - implement-op-tui
+      - implement-op-cli
+
+  - name: validation
+    description: "Port tests, run cargo test, validate full build"
+    agents: [test-validator]
+    tasks:
+      - port-tests
+      - cargo-test
+      - cargo-build-release

@@ -1,0 +1,19 @@
+[package]
+name = "op-engine"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+op-core = { path = "../op-core" }
+op-model = { path = "../op-model" }
+op-tools = { path = "../op-tools" }
+serde = { workspace = true }
+serde_json = { workspace = true }
+thiserror = { workspace = true }
+tokio = { workspace = true }
+tokio-util = { workspace = true }
+async-trait = { workspace = true }
+futures = { workspace = true }
+tracing = { workspace = true }
+regex = { workspace = true }
+parking_lot = { workspace = true }
