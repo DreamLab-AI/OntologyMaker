@@ -1,0 +1,19 @@
+[package]
+name = "op-tui"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+op-core = { path = "../op-core" }
+op-engine = { path = "../op-engine" }
+op-runtime = { path = "../op-runtime" }
+op-model = { path = "../op-model" }
+serde = { workspace = true }
+serde_json = { workspace = true }
+tokio = { workspace = true }
+ratatui = { workspace = true }
+crossterm = { workspace = true }
+tracing = { workspace = true }
+regex = { workspace = true }
+chrono = { workspace = true }
+parking_lot = { workspace = true }
