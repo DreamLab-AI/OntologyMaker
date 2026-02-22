@@ -1,12 +1,6 @@
 .env
 .env.*
-node_modules/
-__pycache__/
-*.pyc
-*.egg-info/
-dist/
-build/
+target/
 *.cast
 *.mp4
 .openplanter/
-target/
