@@ -1,0 +1,18 @@
+[package]
+name = "op-model"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+op-core = { path = "../op-core" }
+serde = { workspace = true }
+serde_json = { workspace = true }
+thiserror = { workspace = true }
+tokio = { workspace = true }
+reqwest = { workspace = true }
+async-trait = { workspace = true }
+futures = { workspace = true }
+bytes = { workspace = true }
+tracing = { workspace = true }
+chrono = { workspace = true }
+regex = { workspace = true }

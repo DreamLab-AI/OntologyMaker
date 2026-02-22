@@ -1,0 +1,26 @@
+[package]
+name = "op-cli"
+version = "0.1.0"
+edition = "2021"
+
+[[bin]]
+name = "openplanter-agent"
+path = "src/main.rs"
+
+[dependencies]
+op-core = { path = "../op-core" }
+op-model = { path = "../op-model" }
+op-tools = { path = "../op-tools" }
+op-engine = { path = "../op-engine" }
+op-runtime = { path = "../op-runtime" }
+op-tui = { path = "../op-tui" }
+serde = { workspace = true }
+serde_json = { workspace = true }
+tokio = { workspace = true }
+clap = { workspace = true }
+tracing = { workspace = true }
+tracing-subscriber = { workspace = true }
+regex = { workspace = true }
+chrono = { workspace = true }
+reqwest = { workspace = true }
+atty = "0.2"
